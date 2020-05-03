@@ -25,6 +25,7 @@ import javax.inject.Inject
  * LoginViewModel is the ViewModel that [LoginActivity] uses to
  * obtain information of what to show on the screen and handle complex logic.
  */
+@ActivityScope
 class LoginViewModel @Inject constructor(private val userManager: UserManager) {
 
     private val _loginState = MutableLiveData<LoginViewState>()
