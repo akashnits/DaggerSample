@@ -1,12 +1,6 @@
 # Using Dagger in your Android app
 
-This folder contains the source code for the "Using Dagger in your Android app" codelab.
-
-The codelab is built in multiple GitHub branches:
-* `master` is the codelab's starting point.
-* `1_registration_main`, `2_subcomponents`, and `3_dagger_app` are intermediate
-steps towards the solution.
-* `solution` contains the solution to this codelab.
+This folder contains the source code for the "Using Dagger in your Android app" codelab
 
 
 # Introduction
@@ -19,25 +13,60 @@ Implementing dependency injection provides you with the following advantages:
 * Ease of refactoring.
 * Ease of testing.
 
+# Notes
+1. Start with using @Inject constructor()
 
-# Pre-requisites
-* Experience with Kotlin syntax.
-* You understand Dependency Injection and know what the benefits
-of using Dagger in your Android app are.
+2. Go for field injection and write AppComponent interface so that Dagger can build a dependency graph at compile-time
 
-# Getting Started
-1. Install Android Studio, if you don't already have it.
-2. Download the sample.
-3. Import the sample into Android Studio.
-4. Build and run the sample.
+A @Component interface gives the information Dagger needs to generate the graph at compile-time. The parameter of the interface methods define what classes request injection.
+
+3. Object of interfaces are injected using @Binds annotation ( we need to write modules for that )
+
+ A Dagger Module is a class that is annotated with @Module. There, you can define how to provide dependencies with the @Provides or @Binds annotations.
+ Use @Binds on function inside module class tell Dagger which implementation it needs to use when providing an interface.
+ Function providing object of interface will take the class ( which is impl the interface ) as parameter 
+
+Next step is include module into AppComponent so that Dagger builds a graph at compile time to satisfy interface dependency
+
+@BindsInstance annotation is used for objects which is outside of graph such as objects provided by android framework e.g. Context
+
+@Component.Factory is used to annotate factory interface e.g factory for AppComponent
 
 
-# Comparison between different branches
-* Step 1 - `master` to `1_registration_main` ([Comparison](https://github.com/googlecodelabs/android-dagger/compare/master...1_registration_main))
-* Step 2 - `1_registration_main` to `2_subcomponents` ([Comparison](https://github.com/googlecodelabs/android-dagger/compare/1_registration_main...2_subcomponents))
-* Step 3 - `2_subcomponents` to `3_dagger_app` ([Comparison](https://github.com/googlecodelabs/android-dagger/compare/2_subcomponents...3_dagger_app))
-* Step 4 - `3_dagger_app` to `solution` ([Comparison](https://github.com/googlecodelabs/android-dagger/compare/3_dagger_app...solution))
-* [Full codelab comparison](https://github.com/googlecodelabs/android-dagger/compare/master...solution)
+Now, we need to inject application graph into activity which requests injection
+
+Note: Dagger doesn't support field injection for private member variables
+
+Scoping: @Singleton is the only scope which comes with javax.inject package. if we want the same object everytime it's requested from dagger, we need to
+
+1. Use @Singleton annotation at AppComponent interface i.e. annotate application graph to support Singleton pattern
+2. Use @Singleton annotation at object creation which we want to scope i.e. places such as @Inject contructor(...) or @Provides
+
+
+Important - Best practices
+
+An Activity injects Dagger in the onCreate method before calling super.
+
+A Fragment injects Dagger in the onAttach method after calling super.
+
+
+SubComponents:
+Subcomponents are components that inherit and extend the object graph of a parent component (e.g appComponent). Thus, all objects provided in the parent component will be provided in the subcomponent too. In this way, an object from a subcomponent can depend on an object provided by the parent component.
+
+These are used e.g. when we want to scope videmodel to an activity rather than application
+
+
+@SubComponent annotation is used to notify Dagger that this is a Subcomponent
+
+There are two different ways to interact with the Dagger graph:
+
+Declaring a function that returns Unit and takes a class as a parameter allows field injection in that class (e.g. fun inject(activity: MainActivity)).
+Declaring a function that returns a type allows retrieving types from the graph (e.g. fun registrationComponent(): RegistrationComponent.Factory).
+
+Scoping subcomponets: Since we have already used Singleton scope, we can create custom scope such as Activity scope which is tied to lifecycle of the activity
+using Activity scope with RegistrationComponent and Registration viewmodel ensures that same instance of registration viewmodel is used for Registration activity and it's fragments. 
+Also, a new instance is used when registration activity is re-created.
+
 
 
 # License
